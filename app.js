@@ -1,27 +1,14 @@
 var express    = require("express"),
     app        = express(),
     bodyParser = require("body-parser"),
-    mongoose   = require("mongoose")
-    Campground = require("./models/campground");
+    mongoose   = require("mongoose"),
+    Campground = require("./models/campground"),
+    seedDB     = require("./seeds");
 
+seedDB();
 mongoose.connect("mongodb://localhost/yelp_camp");
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
-
-
-
-// Campground.create({
-//   name: "kodak",
-//   image: "https://farm2.staticflickr.com/1086/882244782_d067df2717.jpg",
-//   description: "This is a beautiful place in kerala with no external disturbances."
-// }, function (err, campground) {
-//   if (err) {
-//     console.log(err);
-//   }else{
-//     console.log("newly created campground");
-//     console.log(campground);
-//   }
-// });
 
 app.get("/", function(req, res){
   res.render("landing");
