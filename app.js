@@ -4,11 +4,12 @@ var express    = require("express"),
     mongoose   = require("mongoose"),
     Campground = require("./models/campground"),
     seedDB     = require("./seeds");
+    Comment = require("./models/comment");
 
-seedDB();
 mongoose.connect("mongodb://localhost/yelp_camp");
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
+seedDB();
 
 app.get("/", function(req, res){
   res.render("landing");
@@ -20,7 +21,7 @@ app.get("/campgrounds", function(req, res){
     if (err) {
       console.log(err);
     }else {
-      res.render("index", {campgrounds: campgrounds});
+      res.render("campgrounds/index", {campgrounds: campgrounds});
     }
   })
 });
@@ -44,20 +45,50 @@ app.post("/campgrounds", function(req, res){
 
 //CREATE
 app.get("/campgrounds/new", function(req, res){
-  res.render("new");
+  res.render("campgrounds/new");
 })
 
 //SHOW
 app.get("/campgrounds/:id", function(req, res){
-  Campground.findById(req.params.id, function(err, foundCampground){
+  Campground.findById(req.params.id).populate("comments").exec(function(err, foundCampground){
     if (err) {
       console.log(err);
     }else {
-      res.render("show", {campground: foundCampground});
+      res.render("campgrounds/show", {campground: foundCampground});
     }
-  })
+  });
 });
 
+// ==============
+// COMMENTS
+// ==============
+app.get("/campgrounds/:id/comments/new", function (req, res) {
+  Campground.findById(req.params.id, function(err, campground) {
+    if (err) {
+      console.log(err);
+    }else {
+      res.render("comments/new", {campground: campground});
+      }
+  });
+});
+
+app.post("/campgrounds/:id/comments", function (req, res){
+  Campground.findById(req.params.id, function(err, campground) {
+    if (err) {
+      console.log(err);
+    }else {
+      Comment.create(req.body.comment, function(err, comment){
+        if (err) {
+          console.log(err);
+        }else {
+          campground.comments.push(comment);
+          campground.save();
+          res.redirect("/campgrounds/" + campground._id);
+        }
+      });
+    }
+  });
+});
 
 app.listen(3000, function(){
   console.log("server is running on port 3000");
